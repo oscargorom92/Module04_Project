@@ -1,0 +1,56 @@
+---
+title: "Module 4 Worshop 2"
+author: "Oscar Gonzalez"
+date: "2025-09-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## End-to-end data alysis in R
+
+The purpose of this exercise is to review available datasets for analysis. I chose to analyze shark captures by year from 2001 to 2025 across six locations in Queensland. The data were obtained as a .csv file from the QFISH website: https://qfish.fisheries.qld.gov.au/. I exported the file to my local folder and began the analysis in Rstudio:
+
+# Install and load all necessary R packages for this analysis
+```{r}
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+```
+
+# Import shark capture data to Rstudio
+```{r}
+sharks <- read.csv("C:/Users/mosac/Desktop/Sharks_QLD.csv", 
+                   check.names = FALSE, #Tells R not to fix column names
+                   stringsAsFactors = FALSE) #Keep text columns as characters
+```
+
+# Tidy data
+```{r}
+sharks_long <- sharks %>%  #Starts a pipeline on the dataframe "sharks" and assign final result to sharks_long
+  rename(Location = 1) %>%  #Renames the first column to Location
+   pivot_longer(-Location, names_to = "Year", values_to = "Sharks") %>% #Converts table to one row per Location-Year pair
+   mutate(   #Ensure correct data types
+    Year   = as.integer(Year),
+    Sharks = as.numeric(Sharks) 
+  ) %>%
+  drop_na(Year, Sharks) #Remove rows where Year or Sharks are missing (NA)
+```
+  
+# Visualize and check the new table setup
+```{r}
+view(sharks_long)
+```
+
+# Build a plot for each Locality
+```{r}
+ggplot(sharks_long, aes(Year, Sharks, color = Location)) +  #Tells ggplot to group by locality with a unique color
+  geom_line(linewidth = 0.8) + geom_point(size = 1.4) +    #Add lines and points to each plot
+  facet_wrap(~ Location, scales = "free_y") +  #Creates a small panel for each location, each with its own y axis 
+  scale_color_viridis_d(option = "C", end = 0.9) +  #Pick viridis color palette
+  guides(color = "none") +     #Not showing the color labelling
+  labs(x = "Year", y = "Sharks caught") +  #Show labels in axes
+  theme_bw()   #Theme black and white
+```
